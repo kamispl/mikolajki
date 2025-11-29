@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Mikołajkowy Konfigurator</title>
+
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <h1>🎁 Mikołajkowy Konfigurator</h1>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="controls card">
+    <div class="input-row">
+      <input id="item-input" placeholder="Dodaj osobę...">
+      <button id="create-button" class="btn primary">Dodaj</button>
+    </div>
+
+    <button id="edit-toggle-button" class="btn ghost">Tryb edycji</button>
+  </section>
+
+  <section class="lists card">
+
+    <div class="panel source-panel">
+      <h2>Lista osób</h2>
+      <ul id="source-list" class="list"></ul>
+    </div>
+
+    <div class="panel targets-panel">
+      <h2>Dopasowania</h2>
+      <ul id="target-area" class="targets"></ul>
+    </div>
+
+  </section>
+
+</main>
+
+<script src="script.js"></script>
+</body>
+</html>
