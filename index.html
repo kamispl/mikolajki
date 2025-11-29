@@ -1,40 +1,42 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Mikołajkowy Konfigurator</title>
-
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-
-<header class="topbar">
-  <h2>🎁 Mikołajkowy Konfigurator</h2>
-</header>
-
-<main class="container">
-
-  <section class="card">
-    <div class="input-row">
-      <input id="item-input" placeholder="Dodaj osobę...">
-      <button id="create-button">Dodaj</button>
+  <header class="topbar">
+    <div class="topbar-row">
+      <h2>🎁 Mikołajkowy Konfigurator</h2>
+      <div class="controls">
+        <button id="edit-toggle" class="btn-small">Edytuj: <span id="edit-state">OFF</span></button>
+      </div>
     </div>
-  </section>
+  </header>
 
-  <section class="card">
-    <h3>Pula 1 (przeciągane)</h3>
-    <div id="source-list" class="source-list"></div>
-  </section>
+  <main class="container">
+    <section class="card add-card">
+      <div class="input-row">
+        <input id="item-input" placeholder="Dodaj osobę..." autocomplete="off" />
+        <button id="create-button" class="btn">Dodaj</button>
+      </div>
+    </section>
 
-  <section class="card">
-    <h3>Pula 2 (dopasowania)</h3>
-    <div id="target-area" class="target-list"></div>
-  </section>
+    <section class="card grid">
+      <div class="col left-col">
+        <h3>Pula osób</h3>
+        <div id="source-list" class="source-list" aria-label="Pula osób"></div>
+      </div>
 
-</main>
+      <div class="col right-col">
+        <h3>Dopasowania</h3>
+        <div id="target-area" class="target-list" aria-label="Dopasowania"></div>
+      </div>
+    </section>
+  </main>
 
-<script src="script.js"></script>
-
+  <script src="script.js"></script>
 </body>
 </html>
