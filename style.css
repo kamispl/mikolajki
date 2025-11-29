@@ -1,130 +1,280 @@
-/* ——— Apple-like UI ——— */
+document.addEventListener("DOMContentLoaded", () => {
 
-:root {
-  --bg: #f5f5f7;
-  --card: rgba(255,255,255,0.75);
-  --accent: #0a84ff;
-  --muted: #9ca3af;
-  --radius: 16px;
-  --shadow: 0 8px 24px rgba(0,0,0,0.08);
-}
+  const itemInput = document.getElementById("item-input");
+  const createButton = document.getElementById("create-button");
+  const sourceList = document.getElementById("source-list");
+  const targetArea = document.getElementById("target-area");
+  const editToggleButton = document.getElementById("edit-toggle-button");
 
-* { box-sizing: border-box; }
+  let isEditMode = false;
+  let dragged = null;
 
-body {
-  margin: 0;
-  font-family: Inter, -apple-system, system-ui;
-  background: var(--bg);
-  color: #111;
-}
+  const KEY_SOURCE = "mk_source";
+  const KEY_TARGET = "mk_target";
 
-.topbar {
-  padding: 22px 18px;
-  backdrop-filter: blur(12px);
-  background: rgba(255,255,255,0.6);
-  border-bottom: 1px solid rgba(0,0,0,0.05);
-}
+  const escapeHtml = s => s.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const cssEscape = s => s.replace(/"/g, '\\"');
 
-.topbar-inner { max-width: 1100px; margin: 0 auto; }
-.topbar h1 { margin: 0; font-size: 22px; font-weight: 700; }
 
-.container { max-width: 1100px; margin: 22px auto; padding: 0 16px; }
+  /* ===================================
+     TWORZENIE ELEMENTÓW
+  =================================== */
 
-.card {
-  background: var(--card);
-  backdrop-filter: blur(20px);
-  border-radius: var(--radius);
-  padding: 16px;
-  box-shadow: var(--shadow);
-  border: 1px solid rgba(255,255,255,0.6);
-}
+  function createSourceItem(name) {
+    const li = document.createElement("li");
+    li.className = "source-item";
+    li.dataset.name = name;
+    li.textContent = name;
+    li.setAttribute("draggable", "true");
 
-.controls { display: flex; flex-direction: column; gap: 12px; }
+    const del = document.createElement("button");
+    del.className = "small-delete";
+    del.textContent = "×";
+    del.onclick = () => { if (isEditMode) removePerson(name); };
+    li.appendChild(del);
 
-.input-row { display: flex; gap: 10px; }
+    li.addEventListener("dragstart", e => {
+      if (isEditMode) return e.preventDefault();
+      dragged = li;
+      e.dataTransfer.setData("text", `source:${name}`);
+    });
 
-#item-input {
-  flex: 1;
-  padding: 12px 14px;
-  border-radius: 12px;
-  border: 1px solid rgba(0,0,0,0.12);
-  background: rgba(255,255,255,0.8);
-}
+    li.addEventListener("dragend", () => dragged = null);
 
-.btn {
-  padding: 10px 14px;
-  border-radius: 12px;
-  border: none;
-  font-weight: 600;
-  cursor: pointer;
-}
+    return li;
+  }
 
-.btn.primary { background: var(--accent); color: white; }
-.btn.ghost { background: rgba(255,255,255,0.4); border: 1px solid rgba(0,0,0,0.08); }
 
-.lists { display: grid; grid-template-columns: 340px 1fr; gap: 16px; }
+  function createTargetCard(person) {
+    const li = document.createElement("li");
+    li.className = "target-card";
+    li.dataset.person = person;
 
-.list {
-  min-height: 320px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 12px;
-  border-radius: 14px;
-  background: rgba(255,255,255,0.45);
-  border: 1px solid rgba(0,0,0,0.05);
-}
+    const header = document.createElement("div");
+    header.className = "target-header";
+    header.textContent = person;
 
-.source-item {
-  padding: 12px 14px;
-  background: white;
-  border-radius: 12px;
-  font-weight: 600;
-  display: flex;
-  justify-content: space-between;
-  cursor: grab;
-}
+    const drop = document.createElement("div");
+    drop.className = "drop-zone";
+    drop.dataset.targetFor = person;
 
-.small-delete { display: none; border: none; background: none; color: #ff3b30; font-size: 18px; }
-body.edit-mode .small-delete { display: inline; }
+    drop.addEventListener("dragover", e => {
+      if (isEditMode) return;
+      e.preventDefault();
+      drop.classList.add("over");
+    });
 
-.targets { display: flex; flex-direction: column; gap: 16px; }
+    drop.addEventListener("dragleave", () => drop.classList.remove("over"));
 
-.target-card {
-  background: white;
-  padding: 14px;
-  border-radius: 14px;
-  border: 1px solid rgba(0,0,0,0.05);
-}
+    drop.addEventListener("drop", e => {
+      drop.classList.remove("over");
+      if (isEditMode) return;
 
-.target-header { font-size: 16px; font-weight: 600; margin-bottom: 10px; }
+      const data = e.dataTransfer.getData("text");
+      if (!data) return;
 
-.drop-zone {
-  min-height: 48px;
-  padding: 10px;
-  border-radius: 12px;
-  background: rgba(240,240,240,0.6);
-  border: 1px dashed rgba(0,0,0,0.08);
-  display: flex;
-  gap: 8px;
-}
+      const existing = drop.querySelector(".match-item");
 
-.drop-zone.over { background: rgba(0,122,255,0.1); border-color: var(--accent); }
+      // źródło → docelowa karta
+      if (data.startsWith("source:")) {
+        const name = data.split(":")[1];
 
-.match-item {
-  padding: 8px 12px;
-  background: var(--accent);
-  color: white;
-  border-radius: 999px;
-  font-weight: 600;
-  display: flex;
-  gap: 8px;
-  cursor: grab;
-}
+        // 1:1 ograniczenia — brak alertów
+        if (existing) return;
+        if (isAlreadyAssigned(name)) return;
 
-.remove-match { display: none; background: none; border: none; color: white; }
-body.edit-mode .remove-match { display: inline; }
+        createMatchElement(drop, name);
+        removeSourceByName(name);
+        saveData();
+        return;
+      }
 
-@media(max-width:900px){
-  .lists { grid-template-columns: 1fr; }
-}
+      // SWAP match → match
+      if (data.startsWith("match:")) {
+        const [name, fromPerson] = data.split(":")[1].split("|");
+        const draggedEl = findMatchElement(fromPerson, name);
+        if (!draggedEl) return;
+
+        if (existing) {
+          // wymiana miejsc
+          const parentFrom = draggedEl.parentElement;
+          drop.appendChild(draggedEl);
+          parentFrom.appendChild(existing);
+        } else {
+          drop.appendChild(draggedEl);
+        }
+
+        saveData();
+      }
+    });
+
+    li.appendChild(header);
+    li.appendChild(drop);
+
+    return li;
+  }
+
+
+  function createMatchElement(dropZone, name) {
+    const span = document.createElement("span");
+    span.className = "match-item";
+    span.dataset.name = name;
+    span.setAttribute("draggable", "true");
+    span.textContent = name;
+
+    const rm = document.createElement("button");
+    rm.className = "remove-match";
+    rm.textContent = "×";
+    rm.onclick = () => {
+      if (!isEditMode) return;
+      span.remove();
+      if (!sourceList.querySelector(`[data-name="${cssEscape(name)}"]`)) {
+        sourceList.appendChild(createSourceItem(name));
+      }
+      saveData();
+    };
+    span.appendChild(rm);
+
+    span.addEventListener("dragstart", e => {
+      if (isEditMode) return e.preventDefault();
+      const fromCard = span.closest(".target-card").dataset.person;
+      dragged = span;
+      e.dataTransfer.setData("text", `match:${name}|${fromCard}`);
+    });
+
+    span.addEventListener("dragend", () => dragged = null);
+
+    dropZone.appendChild(span);
+  }
+
+
+  /* ===================================
+     UTILS
+  =================================== */
+
+  function findMatchElement(person, name) {
+    return targetArea.querySelector(
+      `.target-card[data-person="${cssEscape(person)}"] .match-item[data-name="${cssEscape(name)}"]`
+    );
+  }
+
+  function isAlreadyAssigned(name) {
+    return !!document.querySelector(`.match-item[data-name="${cssEscape(name)}"]`);
+  }
+
+  function removeSourceByName(name) {
+    const el = sourceList.querySelector(`[data-name="${cssEscape(name)}"]`);
+    if (el) el.remove();
+  }
+
+
+  /* ===================================
+     GŁÓWNE FUNKCJE
+  =================================== */
+
+  function addNewItem() {
+    const name = itemInput.value.trim();
+    if (!name) return;
+
+    // nie pozwalaj dodać duplikatu, ale bez alertów
+    if (sourceList.querySelector(`[data-name="${cssEscape(name)}"]`)) return;
+    if (targetArea.querySelector(`[data-person="${cssEscape(name)}"]`)) return;
+
+    sourceList.appendChild(createSourceItem(name));
+    targetArea.appendChild(createTargetCard(name));
+
+    itemInput.value = "";
+    saveData();
+  }
+
+
+  function removePerson(name) {
+    removeSourceByName(name);
+
+    const card = targetArea.querySelector(`[data-person="${cssEscape(name)}"]`);
+    if (card) {
+      const assigned = card.querySelector(".match-item");
+      if (assigned) {
+        const assignedName = assigned.dataset.name;
+        if (!sourceList.querySelector(`[data-name="${cssEscape(assignedName)}"]`)) {
+          sourceList.appendChild(createSourceItem(assignedName));
+        }
+      }
+      card.remove();
+    }
+
+    saveData();
+  }
+
+
+  /* ===================================
+     STORAGE
+  =================================== */
+
+  function saveData() {
+    const sources = [...sourceList.children].map(li => li.dataset.name);
+
+    const targets = {};
+    targetArea.querySelectorAll(".target-card").forEach(card => {
+      const person = card.dataset.person;
+      const matchEl = card.querySelector(".match-item");
+      targets[person] = matchEl ? matchEl.dataset.name : null;
+    });
+
+    localStorage.setItem(KEY_SOURCE, JSON.stringify(sources));
+    localStorage.setItem(KEY_TARGET, JSON.stringify(targets));
+  }
+
+
+  function loadData() {
+    sourceList.innerHTML = "";
+    targetArea.innerHTML = "";
+
+    const sources = JSON.parse(localStorage.getItem(KEY_SOURCE) || "[]");
+    const targets = JSON.parse(localStorage.getItem(KEY_TARGET) || "{}");
+
+    const allPeople = new Set([...sources, ...Object.keys(targets)]);
+
+    allPeople.forEach(p => {
+      targetArea.appendChild(createTargetCard(p));
+    });
+
+    sources.forEach(s => {
+      sourceList.appendChild(createSourceItem(s));
+    });
+
+    for (const person in targets) {
+      const assigned = targets[person];
+      if (!assigned) continue;
+
+      const drop = targetArea.querySelector(
+        `.target-card[data-person="${cssEscape(person)}"] .drop-zone`
+      );
+
+      if (drop) {
+        createMatchElement(drop, assigned);
+        removeSourceByName(assigned);
+      }
+    }
+  }
+
+
+  /* ===================================
+     EVENTY
+  =================================== */
+
+  createButton.onclick = addNewItem;
+  itemInput.addEventListener("keypress", e => {
+    if (e.key === "Enter") addNewItem();
+  });
+
+  editToggleButton.onclick = () => {
+    isEditMode = !isEditMode;
+    document.body.classList.toggle("edit-mode", isEditMode);
+  };
+
+
+  /* INIT */
+  loadData();
+
+});
