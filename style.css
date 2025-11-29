@@ -1,280 +1,207 @@
-document.addEventListener("DOMContentLoaded", () => {
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mikołajkowy Konfigurator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f5f5f7;
+      --card: rgba(255,255,255,0.75);
+      --accent: #0a84ff;
+      --radius: 16px;
+      --shadow: 0 8px 24px rgba(0,0,0,0.08);
+    }
 
-  const itemInput = document.getElementById("item-input");
-  const createButton = document.getElementById("create-button");
-  const sourceList = document.getElementById("source-list");
-  const targetArea = document.getElementById("target-area");
-  const editToggleButton = document.getElementById("edit-toggle-button");
+    * { box-sizing: border-box; user-select: none; }
 
-  let isEditMode = false;
+    body {
+      margin: 0;
+      font-family: Inter, system-ui;
+      background: var(--bg);
+    }
+
+    .topbar {
+      padding: 18px;
+      background: rgba(255,255,255,0.7);
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .container { max-width: 1100px; margin: 20px auto; padding: 0 16px; }
+
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+    }
+
+    .input-row { display: flex; gap: 10px; }
+
+    input {
+      flex: 1;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(0,0,0,0.2);
+    }
+
+    button {
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
+    }
+
+    /* ====== PULA 1 – OBOK SIEBIE + ZAWIJANIE ====== */
+    .source-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .source-item {
+      background: white;
+      padding: 10px 14px;
+      border-radius: 999px;
+      cursor: grab;
+    }
+
+    /* ====== PULA 2 – JEDEN POD DRUGIM ====== */
+    .target-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .target-card {
+      background: white;
+      border-radius: 14px;
+      padding: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .drop-zone {
+      flex: 1;
+      min-height: 40px;
+      background: rgba(0,0,0,0.05);
+      border-radius: 12px;
+      padding: 6px;
+    }
+
+    .drop-zone.over { background: rgba(10,132,255,0.2); }
+
+    .match-item {
+      display: inline-block;
+      background: var(--accent);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 999px;
+      cursor: grab;
+    }
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <h2>🎁 Mikołajkowy Konfigurator</h2>
+</header>
+
+<main class="container">
+
+  <section class="card">
+    <div class="input-row">
+      <input id="item-input" placeholder="Dodaj osobę...">
+      <button id="create-button">Dodaj</button>
+    </div>
+  </section>
+
+  <!-- PULA 1 -->
+  <section class="card">
+    <h3>Pula 1 (przeciągane)</h3>
+    <div id="source-list" class="source-list"></div>
+  </section>
+
+  <!-- PULA 2 -->
+  <section class="card">
+    <h3>Pula 2 (dopasowania)</h3>
+    <div id="target-area" class="target-list"></div>
+  </section>
+
+</main>
+
+<script>
+  const input = document.getElementById('item-input');
+  const addBtn = document.getElementById('create-button');
+  const sourceList = document.getElementById('source-list');
+  const targetArea = document.getElementById('target-area');
+
   let dragged = null;
 
-  const KEY_SOURCE = "mk_source";
-  const KEY_TARGET = "mk_target";
-
-  const escapeHtml = s => s.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const cssEscape = s => s.replace(/"/g, '\\"');
-
-
-  /* ===================================
-     TWORZENIE ELEMENTÓW
-  =================================== */
-
-  function createSourceItem(name) {
-    const li = document.createElement("li");
-    li.className = "source-item";
-    li.dataset.name = name;
-    li.textContent = name;
-    li.setAttribute("draggable", "true");
-
-    const del = document.createElement("button");
-    del.className = "small-delete";
-    del.textContent = "×";
-    del.onclick = () => { if (isEditMode) removePerson(name); };
-    li.appendChild(del);
-
-    li.addEventListener("dragstart", e => {
-      if (isEditMode) return e.preventDefault();
-      dragged = li;
-      e.dataTransfer.setData("text", `source:${name}`);
-    });
-
-    li.addEventListener("dragend", () => dragged = null);
-
-    return li;
-  }
-
-
-  function createTargetCard(person) {
-    const li = document.createElement("li");
-    li.className = "target-card";
-    li.dataset.person = person;
-
-    const header = document.createElement("div");
-    header.className = "target-header";
-    header.textContent = person;
-
-    const drop = document.createElement("div");
-    drop.className = "drop-zone";
-    drop.dataset.targetFor = person;
-
-    drop.addEventListener("dragover", e => {
-      if (isEditMode) return;
-      e.preventDefault();
-      drop.classList.add("over");
-    });
-
-    drop.addEventListener("dragleave", () => drop.classList.remove("over"));
-
-    drop.addEventListener("drop", e => {
-      drop.classList.remove("over");
-      if (isEditMode) return;
-
-      const data = e.dataTransfer.getData("text");
-      if (!data) return;
-
-      const existing = drop.querySelector(".match-item");
-
-      // źródło → docelowa karta
-      if (data.startsWith("source:")) {
-        const name = data.split(":")[1];
-
-        // 1:1 ograniczenia — brak alertów
-        if (existing) return;
-        if (isAlreadyAssigned(name)) return;
-
-        createMatchElement(drop, name);
-        removeSourceByName(name);
-        saveData();
-        return;
-      }
-
-      // SWAP match → match
-      if (data.startsWith("match:")) {
-        const [name, fromPerson] = data.split(":")[1].split("|");
-        const draggedEl = findMatchElement(fromPerson, name);
-        if (!draggedEl) return;
-
-        if (existing) {
-          // wymiana miejsc
-          const parentFrom = draggedEl.parentElement;
-          drop.appendChild(draggedEl);
-          parentFrom.appendChild(existing);
-        } else {
-          drop.appendChild(draggedEl);
-        }
-
-        saveData();
-      }
-    });
-
-    li.appendChild(header);
-    li.appendChild(drop);
-
-    return li;
-  }
-
-
-  function createMatchElement(dropZone, name) {
-    const span = document.createElement("span");
-    span.className = "match-item";
-    span.dataset.name = name;
-    span.setAttribute("draggable", "true");
-    span.textContent = name;
-
-    const rm = document.createElement("button");
-    rm.className = "remove-match";
-    rm.textContent = "×";
-    rm.onclick = () => {
-      if (!isEditMode) return;
-      span.remove();
-      if (!sourceList.querySelector(`[data-name="${cssEscape(name)}"]`)) {
-        sourceList.appendChild(createSourceItem(name));
-      }
-      saveData();
-    };
-    span.appendChild(rm);
-
-    span.addEventListener("dragstart", e => {
-      if (isEditMode) return e.preventDefault();
-      const fromCard = span.closest(".target-card").dataset.person;
-      dragged = span;
-      e.dataTransfer.setData("text", `match:${name}|${fromCard}`);
-    });
-
-    span.addEventListener("dragend", () => dragged = null);
-
-    dropZone.appendChild(span);
-  }
-
-
-  /* ===================================
-     UTILS
-  =================================== */
-
-  function findMatchElement(person, name) {
-    return targetArea.querySelector(
-      `.target-card[data-person="${cssEscape(person)}"] .match-item[data-name="${cssEscape(name)}"]`
-    );
-  }
-
-  function isAlreadyAssigned(name) {
-    return !!document.querySelector(`.match-item[data-name="${cssEscape(name)}"]`);
-  }
-
-  function removeSourceByName(name) {
-    const el = sourceList.querySelector(`[data-name="${cssEscape(name)}"]`);
-    if (el) el.remove();
-  }
-
-
-  /* ===================================
-     GŁÓWNE FUNKCJE
-  =================================== */
-
-  function addNewItem() {
-    const name = itemInput.value.trim();
+  function addItem() {
+    const name = input.value.trim();
     if (!name) return;
 
-    // nie pozwalaj dodać duplikatu, ale bez alertów
-    if (sourceList.querySelector(`[data-name="${cssEscape(name)}"]`)) return;
-    if (targetArea.querySelector(`[data-person="${cssEscape(name)}"]`)) return;
+    // ====== PULA 1 ======
+    const source = document.createElement('div');
+    source.className = 'source-item';
+    source.textContent = name;
+    source.draggable = true;
 
-    sourceList.appendChild(createSourceItem(name));
-    targetArea.appendChild(createTargetCard(name));
+    source.addEventListener('dragstart', () => dragged = source);
 
-    itemInput.value = "";
-    saveData();
-  }
+    sourceList.appendChild(source);
 
+    // ====== PULA 2 ======
+    const card = document.createElement('div');
+    card.className = 'target-card';
 
-  function removePerson(name) {
-    removeSourceByName(name);
+    const label = document.createElement('strong');
+    label.textContent = name;
 
-    const card = targetArea.querySelector(`[data-person="${cssEscape(name)}"]`);
-    if (card) {
-      const assigned = card.querySelector(".match-item");
-      if (assigned) {
-        const assignedName = assigned.dataset.name;
-        if (!sourceList.querySelector(`[data-name="${cssEscape(assignedName)}"]`)) {
-          sourceList.appendChild(createSourceItem(assignedName));
-        }
+    const drop = document.createElement('div');
+    drop.className = 'drop-zone';
+
+    drop.addEventListener('dragover', e => {
+      e.preventDefault();
+      drop.classList.add('over');
+    });
+
+    drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+
+    drop.addEventListener('drop', () => {
+      drop.classList.remove('over');
+      if (dragged && !drop.querySelector('.match-item')) {
+        const match = document.createElement('div');
+        match.className = 'match-item';
+        match.textContent = dragged.textContent;
+        match.draggable = true;
+
+        match.addEventListener('dragstart', () => dragged = match);
+
+        drop.appendChild(match);
+        dragged.remove();
+        dragged = null;
       }
-      card.remove();
-    }
-
-    saveData();
-  }
-
-
-  /* ===================================
-     STORAGE
-  =================================== */
-
-  function saveData() {
-    const sources = [...sourceList.children].map(li => li.dataset.name);
-
-    const targets = {};
-    targetArea.querySelectorAll(".target-card").forEach(card => {
-      const person = card.dataset.person;
-      const matchEl = card.querySelector(".match-item");
-      targets[person] = matchEl ? matchEl.dataset.name : null;
     });
 
-    localStorage.setItem(KEY_SOURCE, JSON.stringify(sources));
-    localStorage.setItem(KEY_TARGET, JSON.stringify(targets));
+    card.appendChild(label);
+    card.appendChild(drop);
+    targetArea.appendChild(card);
+
+    input.value = '';
   }
 
+  addBtn.addEventListener('click', addItem);
+</script>
 
-  function loadData() {
-    sourceList.innerHTML = "";
-    targetArea.innerHTML = "";
-
-    const sources = JSON.parse(localStorage.getItem(KEY_SOURCE) || "[]");
-    const targets = JSON.parse(localStorage.getItem(KEY_TARGET) || "{}");
-
-    const allPeople = new Set([...sources, ...Object.keys(targets)]);
-
-    allPeople.forEach(p => {
-      targetArea.appendChild(createTargetCard(p));
-    });
-
-    sources.forEach(s => {
-      sourceList.appendChild(createSourceItem(s));
-    });
-
-    for (const person in targets) {
-      const assigned = targets[person];
-      if (!assigned) continue;
-
-      const drop = targetArea.querySelector(
-        `.target-card[data-person="${cssEscape(person)}"] .drop-zone`
-      );
-
-      if (drop) {
-        createMatchElement(drop, assigned);
-        removeSourceByName(assigned);
-      }
-    }
-  }
-
-
-  /* ===================================
-     EVENTY
-  =================================== */
-
-  createButton.onclick = addNewItem;
-  itemInput.addEventListener("keypress", e => {
-    if (e.key === "Enter") addNewItem();
-  });
-
-  editToggleButton.onclick = () => {
-    isEditMode = !isEditMode;
-    document.body.classList.toggle("edit-mode", isEditMode);
-  };
-
-
-  /* INIT */
-  loadData();
-
-});
+</body>
+</html>
