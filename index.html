@@ -3,17 +3,18 @@
 <head>
   <meta charset="utf-8" />
 
-  <!-- iPhone / iOS APP ICON -->
+  <!-- APP ICON (iPhone) -->
   <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
   <link rel="icon" type="image/png" href="icon.png">
-
-  <!-- PWA -->
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#ffffff">
+
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" content="#ffffff">
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0,
+                 maximum-scale=1.0, user-scalable=no" />
 
   <title>Mikołajki</title>
   <link rel="stylesheet" href="style.css" />
@@ -40,15 +41,25 @@
 
 <main class="container">
   <section class="card grid">
+
+    <!-- LEWA KOLUMNA -->
     <div class="col left-col">
-      <h3>Pula osób</h3>
-      <div id="source-list" class="source-list"></div>
+      <div class="collapse-header">
+        <h3>Pula osób</h3>
+        <button id="toggle-pool" class="collapse-btn">▼</button>
+      </div>
+
+      <div id="source-wrapper" class="source-wrapper">
+        <div id="source-list" class="source-list"></div>
+      </div>
     </div>
 
+    <!-- PRAWA KOLUMNA -->
     <div class="col right-col">
       <h3>Dopasowania</h3>
       <div id="target-area" class="target-list"></div>
     </div>
+
   </section>
 </main>
 
