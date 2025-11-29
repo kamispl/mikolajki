@@ -13,13 +13,13 @@
       <h2>🎁 Mikołajkowy Konfigurator</h2>
 
       <div class="top-controls">
-        <button id="btn-add-toggle" class="btn-color add-btn">Dodaj</button>
-        <button id="edit-toggle" class="btn-color edit-btn">Edytuj: <span id="edit-state">OFF</span></button>
+        <button id="btn-add-toggle" class="btn-color add-btn">Dodaj OFF</button>
+        <button id="btn-delete-toggle" class="btn-color delete-btn">Usuwanie OFF</button>
         <button id="btn-reset" class="btn-color reset-btn">Reset</button>
       </div>
     </div>
 
-    <!-- pole dodawania -->
+    <!-- pole dodawania (ukryte domyślnie) -->
     <div id="add-area" class="add-area hidden">
       <input id="top-input" placeholder="Wpisz imię..." autocomplete="off" />
       <button id="top-add-btn" class="btn-color add-btn">Dodaj</button>
@@ -30,12 +30,12 @@
     <section class="card grid">
       <div class="col left-col">
         <h3>Pula osób</h3>
-        <div id="source-list" class="source-list"></div>
+        <div id="source-list" class="source-list" aria-label="Pula osób"></div>
       </div>
 
       <div class="col right-col">
         <h3>Dopasowania</h3>
-        <div id="target-area" class="target-list"></div>
+        <div id="target-area" class="target-list" aria-label="Dopasowania"></div>
       </div>
     </section>
   </main>
