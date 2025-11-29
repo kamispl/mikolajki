@@ -2,56 +2,56 @@
 <html lang="pl">
 <head>
   <meta charset="utf-8" />
+
+  <!-- iPhone / iOS APP ICON -->
+  <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
+  <link rel="icon" type="image/png" href="icon.png">
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Mikołajkowy Konfigurator</title>
+
+  <title>Mikołajki</title>
   <link rel="stylesheet" href="style.css" />
-<link rel="apple-touch-icon" href="icon.png">
-<link rel="icon" type="image/png" href="icon.png">
-
-<!-- PWA manifest (opcjonalny, ale zalecany) -->
-<link rel="manifest" href="manifest.json">
-
-<meta name="theme-color" content="#ffffff">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-
-<link rel="apple-touch-startup-image" href="icon.png">
-
 </head>
+
 <body>
 
-  <header class="topbar">
-    <div class="topbar-row">
-      <h2>🎁 Mikołajkowy Konfigurator</h2>
+<header class="topbar">
+  <div class="topbar-row">
+    <h2>🎁 Mikołajkowy Konfigurator</h2>
 
-      <div class="top-controls">
-        <button id="btn-add-toggle" class="btn-color add-btn">Dodaj OFF</button>
-        <button id="btn-delete-toggle" class="btn-color delete-btn">Usuwanie OFF</button>
-        <button id="btn-reset" class="btn-color reset-btn">Reset</button>
-      </div>
+    <div class="top-controls">
+      <button id="btn-add-toggle" class="btn-color add-btn">Dodaj OFF</button>
+      <button id="btn-delete-toggle" class="btn-color delete-btn">Usuwanie OFF</button>
+      <button id="btn-reset" class="btn-color reset-btn">Reset</button>
+    </div>
+  </div>
+
+  <div id="add-area" class="add-area hidden">
+    <input id="top-input" placeholder="Wpisz imię..." autocomplete="off" />
+    <button id="top-add-btn" class="btn-color add-btn">Dodaj</button>
+  </div>
+</header>
+
+<main class="container">
+  <section class="card grid">
+    <div class="col left-col">
+      <h3>Pula osób</h3>
+      <div id="source-list" class="source-list"></div>
     </div>
 
-    <!-- pole dodawania (ukryte domyślnie) -->
-    <div id="add-area" class="add-area hidden">
-      <input id="top-input" placeholder="Wpisz imię..." autocomplete="off" />
-      <button id="top-add-btn" class="btn-color add-btn">Dodaj</button>
+    <div class="col right-col">
+      <h3>Dopasowania</h3>
+      <div id="target-area" class="target-list"></div>
     </div>
-  </header>
+  </section>
+</main>
 
-  <main class="container">
-    <section class="card grid">
-      <div class="col left-col">
-        <h3>Pula osób</h3>
-        <div id="source-list" class="source-list" aria-label="Pula osób"></div>
-      </div>
-
-      <div class="col right-col">
-        <h3>Dopasowania</h3>
-        <div id="target-area" class="target-list" aria-label="Dopasowania"></div>
-      </div>
-    </section>
-  </main>
-
-  <script src="script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
