@@ -1,6 +1,6 @@
 {
-  "name": "Mikołajkowy Konfigurator",
-  "short_name": "Konfigurator",
+  "name": "Mikołajki",
+  "short_name": "Mikołajki",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -8,8 +8,8 @@
   "icons": [
     {
       "src": "icon.png",
-      "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "sizes": "180x180"
     }
   ]
 }
